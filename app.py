@@ -1,5 +1,5 @@
 #!flask/bin/python
-from flask import Flask
+from flask import Flask, render_template
 import cv2
 import imutils
 import json
@@ -13,11 +13,12 @@ from base64 import b64encode
 from IPython.display import Image
 from pylab import rcParams
 rcParams['figure.figsize'] = 10, 20
+import sqlite3
 
 app = Flask(__name__)
 
 @app.route('/')
-def index():
+def convertor():
 
 # Extract text from image
 	from google.cloud import vision
@@ -81,32 +82,24 @@ def index():
 	    out.write(response.audio_content)
 	    print('Audio content written to file "output.mp3"')
 
-	return "Done"
-	# import io
-	# import os
+	return '\n"{}"'.format(texts[0].description)
+	# return "Done"
 
-	# # Imports the Google Cloud client library
-	# from google.cloud import vision
+# from werkzeug.utils import secure_filename
 
-	# # Instantiates a client
-	# client = vision.ImageAnnotatorClient()
+# UPLOAD_FOLDER = '/uploads'
+# ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
-	# # The name of the image file to annotate
-	# file_name = os.path.abspath('Image.jpg')
+# app = Flask(__name__)
+# app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# from flask import send_from_directory
+# @app.route('/uploads/<filename>')
+# def uploaded_file(filename):
+#     return send_from_directory(app.config['UPLOAD_FOLDER'],
+#                                filename)
 
-	# # Loads the image into memory
-	# with io.open(file_name, 'rb') as image_file:
-	#     content = image_file.read()
-
-	# image = vision.Image(content=content)
-
-	# # Performs label detection on the image file
-	# response = client.label_detection(image=image)
-	# labels = response.label_annotations
-
-	# # print('Labels:',labels)
-	# for label in labels:
-	#     print(label.description)
-
+@app.route('/index', methods=('GET', 'POST'))
+def index():
+    return render_template('index.html')
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="localhost",port="8000",debug=True)

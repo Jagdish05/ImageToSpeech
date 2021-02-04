@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <title>Hello, world!</title>
+  </head>
+	<body>
+<div class="container">
+  <h2>Trasnlation Table</h2>
+  <p>The table contains list of translated text from the image</p>   
+	<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th scope="col">Orignal</th>
+      <th scope="col">Translated</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for key, value in text.items() %}
+		<tr>
+				<th> {{ key }} </th>
+				<td> {{ value }} </td>
+		</tr>
+		{% endfor %}
+	 </tbody>
+	 </table>
+</div>	 
+	</body>
+</html>

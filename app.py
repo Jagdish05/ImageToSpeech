@@ -15,9 +15,13 @@ from pylab import rcParams
 rcParams['figure.figsize'] = 10, 20
 import sqlite3
 
-app = Flask(__name__)
+UPLOAD_FOLDER = 'images'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "vision_api.json"
 
-@app.route('/')
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+@app.route('/con')
 def convertor():
 
 # Extract text from image
@@ -32,7 +36,8 @@ def convertor():
 
 	response = client.text_detection(image=image)
 	texts = response.text_annotations
-	print('Texts:',texts[0].description)
+	# print('Texts:',texts[0].description)
+	print(len(texts[0].description))
 
 	# for text in texts:
 	# 	result='\n"{}"'.format(text.description)
@@ -82,6 +87,42 @@ def convertor():
 	    out.write(response.audio_content)
 	    print('Audio content written to file "output.mp3"')
 
+
+
+	from google.cloud import speech
+	client = speech.SpeechClient()
+
+	audio = speech.RecognitionAudio(uri="output.mp3")
+	config = speech.RecognitionConfig(
+	    encoding=speech.RecognitionConfig.AudioEncoding.FLAC,
+	    sample_rate_hertz=16000,
+	    language_code="en-US",
+	    enable_word_time_offsets=True,
+	)
+
+	operation = client.long_running_recognize(config=config, audio=audio)
+
+	print("Waiting for operation to complete...")
+	result = operation.result(timeout=90)
+
+	for result in result.results:
+	    alternative = result.alternatives[0]
+	    print("Transcript: {}".format(alternative.transcript))
+	    print("Confidence: {}".format(alternative.confidence))
+
+	    for word_info in alternative.words:
+	        word = word_info.word
+	        start_time = word_info.start_time
+	        end_time = word_info.end_time
+
+	        print(
+	            f"Word: {word}, start_time: {start_time.total_seconds()}, end_time: {end_time.total_seconds()}"
+	        )
+
+
+
+
+
 	return '\n"{}"'.format(texts[0].description)
 	# return "Done"
 
@@ -98,8 +139,14 @@ def convertor():
 #     return send_from_directory(app.config['UPLOAD_FOLDER'],
 #                                filename)
 
-@app.route('/index', methods=('GET', 'POST'))
+
+
+def allowed_file(filename):
+	return '.' in filename and \
+		filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/index')
 def index():
     return render_template('index.html')
 if __name__ == '__main__':
-    app.run(host="localhost",port="8000",debug=True)
+	app.run(host="localhost",port="8000",debug=True)

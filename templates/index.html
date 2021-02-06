@@ -32,9 +32,11 @@ function myFunction() {
     <input type="submit" id=translate name="Start_translate" value=Translate>
 	</div>
 	<div>
+  <!-- <img src= "../Image.jpg"> -->
+  <!-- <img src="{{url_for('static', filename='Image.jpg')}}" /> -->
 	<audio id = "adi" display = "none" controls>
 
-		<source src="../output1.mp3" type = "audio/mpeg"></source>
+		<source src="{{url_for('static', filename='output.mp3')}}" type = "audio/mpeg"></source>
 	</audio>
 	</div>
     <!--div class="form-group">

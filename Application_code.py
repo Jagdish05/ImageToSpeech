@@ -118,7 +118,7 @@ def convertor_text_to_speech(translated_text,language):
         )
 
         # The response's audio_content is binary.
-        with open("output1.mp3", "wb") as out:
+        with open("static/output.mp3", "wb") as out:
             # Write the response to the output file.
             out.write(response.audio_content)
             print('Audio content written to file "output.mp3"')

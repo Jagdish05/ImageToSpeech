@@ -17,17 +17,14 @@ function myFunction() {
 <div class="form-group" method="GET">
     <label> <strong>Capture OR Upload Your Image</strong> </label>
     <form style="padding-bottom: 20px;" action="{{url_for ('video') }}" method="GET">
-        <input type="submit" id=capture  value=Capture action="{{url_for ('video') }}">
+        <input type="submit" id=capture  value="Capture Image" action="{{url_for ('video') }}">
     </form>
-    <form style="padding-bottom: 20px;" action="{{url_for ('index') }}" method=post>
+    <form enctype=multipart/form-data style="padding-bottom: 20px;" action="{{url_for ('index') }}" method=post>
         <input type=file name=file>
         <!--input type=submit id=upload value=Upload-->
-    </form>
-</div>
-
-<div class="form-group" method="GET">
-    <label> <strong>Select A Language</strong> </label>
-    <form style="padding-bottom: 20px;" method=post>
+    
+	<label> <strong>Select A Language</strong> </label>
+    <label style="padding-bottom: 20px;" method=post>
         <label for="language">Language:</label>
         <select id="language" name="language">
             <option value="en">English</option>
@@ -40,11 +37,9 @@ function myFunction() {
             <option value="ja">Japanese</option>
         </select>
     <input type="submit" id=translate name="Start_translate" value=Translate>
-    </form>
-</div>
-
-<form enctype=multipart/form-data value=Translate action="{{url_for ('index') }}" method=post>
-    <label> <strong>Check Your Results</strong> </label>
+    </label>
+	<br>
+	<label> <strong>Check Your Results</strong> </label>
     <p> Translated Audio </p>
     <div>
   	<!-- <img src= "../Image.jpg"> -->
@@ -53,6 +48,15 @@ function myFunction() {
 	    <source src="{{url_for('static', filename='output.mp3')}}" type = "audio/mpeg"></source>
 	</audio>
     </div>
+	</form>
+</div>
+
+<div class="form-group" method="GET">
+    
+</div>
+
+<form value=Translate action="{{url_for ('index') }}" method=post>
+    
     <!--div class="form-group">
         <label for="content">Content</label>
 		

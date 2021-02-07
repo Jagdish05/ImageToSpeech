@@ -1,5 +1,7 @@
-from flask import Flask, render_template,request
-import cv2
+
+
+from flask import Flask, render_template,request, redirect, url_for, Response, flash
+import cv2 
 import imutils
 import json
 import matplotlib.pyplot as plt
@@ -18,11 +20,32 @@ import sqlite3
 from google.cloud import vision,translate_v2 as translate
 import six
 import io
+from camera import Camera
+import socket
+camera = None
+# from PIL import 
+# import pygame
+# import pygame.camera
+# import PIL.Image as Image
+from cv2 import *
+
+
+# from SimpleCV import Image, Camera
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r"sixth-well-302300-cc8ce0454489.json"
 
 
 app = Flask(__name__)
+# pygame.camera.init()
+# pygame.camera.list_cameras() #Camera detected or not
+# cam = pygame.camera.Camera("/dev/video0",(640,480))
+
+image_path = "static/captures/"
+
+##============================ Extract text from image==================
+
+# vidcap = cv2.VideoCapture(0)
+cam = VideoCapture(0)
 
 # @app.route('/')
 def convertor_image_to_text(filename):
@@ -30,7 +53,7 @@ def convertor_image_to_text(filename):
 # Extract text from image
         
         client = vision.ImageAnnotatorClient()
-        file_name = os.path.abspath("Image/"+filename)
+        file_name = os.path.abspath(image_path+filename)
         with io.open(file_name, 'rb') as image_file:
             content = image_file.read()
 
@@ -45,6 +68,8 @@ def convertor_image_to_text(filename):
                 '{}\nFor more info on error messages, check: '
                 'https://cloud.google.com/apis/design/errors'.format(
                     response.error.message))
+        if print(len(texts))==0:
+            return redirect(url_for('index'))
         return '\n"{}"'.format(texts[0].description)
 
 
@@ -67,17 +92,17 @@ def translate_text(target, Listoftext):
     Target must be an ISO 639-1 language code.
     See https://g.co/cloud/translate/v2/translate-reference#supported_languages
     """
-    print("target",target)
-    print("List",Listoftext)
+    # print("target",target)
+    # print("List",Listoftext)
     import six
     from google.cloud import translate_v2 as translate
     d = dict()
     translate_client = translate.Client()
     for text in Listoftext:
-        print("insideloop",text)
+        # print("insideloop",text)
         if isinstance(text, six.binary_type):
             text = text.decode("utf-8")
-            print("afterif",text)
+            # print("afterif",text)
 
     # Text can also be a sequence of strings, in which case this method
     # will return a sequence of results for each text.
@@ -117,6 +142,11 @@ def convertor_text_to_speech(translated_text,language):
             input=synthesis_input, voice=voice, audio_config=audio_config
         )
 
+        try:
+            os.remove("static/output.mp3")
+        except OSError:
+            pass
+
         # The response's audio_content is binary.
         with open("static/output.mp3", "wb") as out:
             # Write the response to the output file.
@@ -128,7 +158,7 @@ def convertor_text_to_speech(translated_text,language):
 
 from werkzeug.utils import secure_filename
 
-UPLOAD_FOLDER = 'Image'
+UPLOAD_FOLDER = image_path
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 app = Flask(__name__)
@@ -138,49 +168,116 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@app.route('/', methods=('GET', 'POST'))
-
+@app.route('/index', methods=('GET', 'POST'))
 def index():
+    try:
+        os.remove("static/output.mp3")
+    except OSError:
+        pass
     result = "Translated_Text"
     translated_result  = dict()
+    print("request",request)
     if request.method == 'POST':
+        filename='Image.jpg'
+        print("inside post request")
+
         # check if the post request has the file part
           
 #             return render_template("translate.html", text=temp)
         # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
+        # if 'file' not in request.files:
+        #     flash('No file part')
+        #     return redirect(request.url)
         file = request.files['file']
         # if user does not select file, browser also
         # submit an empty part without filename
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
+        # if file.filename == '':
+        #     flash('No selected file')
+            # return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            
-#         print("checking for tanslation button",request.form)
+          
+        print(filename)  
+        print("checking for tanslation button",request.form)
         
-        if request.form['Start_translate'] == 'Translate':
-            language = request.form["language"]
-            
-            result = convertor_image_to_text(filename)
-            list_of_text = result.split('\n')
-        
-            translated_result = translate_text(language,list_of_text)
-            translated_text = translated_result.values()
-            translated_final_text = ''.join(translated_text)
-            print("translated_final_text",translated_final_text)
-            convertor_text_to_speech(translated_final_text,language)
+        # if request.form['Start_translate'] == 'Translate':
+        language = request.form["language"]
+        print(language)
+        result = convertor_image_to_text(filename)
+        list_of_text = result.split('\n')
+        print(result)
+        translated_result = translate_text(language,list_of_text)
+        translated_text = translated_result.values()
+        translated_final_text = ''.join(translated_text)
+        print("translated_final_text",translated_final_text)
+        convertor_text_to_speech(translated_final_text,language)
+
 
     return render_template('index.html', content1 = translated_result, text = translated_result)
-    
+   
+
+##============================Capture image from camera ==================
+
+# camera = None
+# def get_camera():
+#     global camera
+#     if not camera:
+#         camera = Camera()
+#     return camera
+
+
+# @app.route('/',methods=('GET', 'POST'))
+# def index():
+#     return render_template('index.html')
+
+@app.route('/video/')
+def video():
+    return render_template('video.html')
+
+def gen(camera):
+    while True:
+        # frame = camera.get_feed()
+        # print(frame)
+        s, img = cam.read()
+        ret, jpeg = cv2.imencode('.jpg', img)
+        frame=jpeg.tobytes()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+@app.route('/video_feed/')
+def video_feed():
+    capture()
+    return Response(gen(camera),
+        mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/capture/')
+def capture():
+    s, img = cam.read()
+    if s:imwrite("static/captures/Image.jpg",img) 
+    # cam.release()
+    # if request.form['Start_translate'] == 'Translate':
+    #     # language = request.form["language"]
+        
+    #     result = convertor_image_to_text(filename)
+    #     list_of_text = result.split('\n')
+
+    #     translated_result = translate_text(language,list_of_text)
+    #     translated_text = translated_result.values()
+    #     translated_final_text = ''.join(translated_text)
+    #     print("translated_final_text",translated_final_text)
+    #     convertor_text_to_speech(translated_final_text,language)
+
+
+    # return render_template('index.html', content1 = translated_result, text = translated_result)
+    # index()
+    return redirect(url_for('index'))
+
+
 
 if __name__ == '__main__':
     app.secret_key = 'super secret key'
     app.config['SESSION_TYPE'] = 'filesystem'  
 
-    app.run()
+    app.run(host="0.0.0.0",port="8000",debug=True)
 # host="localhost",port="8000",debug=True

@@ -32,16 +32,19 @@ from cv2 import *
 
 # from SimpleCV import Image, Camera
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r"sixth-well-302300-cc8ce0454489.json"
+#os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r"sixth-well-302300-cc8ce0454489.json"
 
 
 app = Flask(__name__)
 # pygame.camera.init()
 # pygame.camera.list_cameras() #Camera detected or not
 # cam = pygame.camera.Camera("/dev/video0",(640,480))
-
-image_path = "static/captures/"
-
+cwd = os.getcwd()
+temp = os.path.join("static","captures")
+image_path = os.path.join(cwd,temp)
+print(image_path)
+secretkey = os.path.join(cwd,r"sixth-well-302300-cc8ce0454489.json")
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = secretkey
 ##============================ Extract text from image==================
 
 # vidcap = cv2.VideoCapture(0)
@@ -53,7 +56,7 @@ def convertor_image_to_text(filename):
 # Extract text from image
         
         client = vision.ImageAnnotatorClient()
-        file_name = os.path.abspath(image_path+filename)
+        file_name = os.path.join(image_path,filename)
         with io.open(file_name, 'rb') as image_file:
             content = image_file.read()
 
@@ -189,6 +192,8 @@ def index():
         #     flash('No file part')
         #     return redirect(request.url)
         file = request.files['file']
+        print(file.filename)
+        print(app.config['UPLOAD_FOLDER'])
         # if user does not select file, browser also
         # submit an empty part without filename
         # if file.filename == '':
@@ -289,5 +294,5 @@ if __name__ == '__main__':
     app.secret_key = 'super secret key'
     app.config['SESSION_TYPE'] = 'filesystem'  
 
-    app.run(host="0.0.0.0",port="8000",debug=True)
+    app.run(host="127.0.0.1",port="8000",debug=True)
 # host="localhost",port="8000",debug=True

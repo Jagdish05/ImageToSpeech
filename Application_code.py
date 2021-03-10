@@ -28,6 +28,7 @@ camera = None
 # import pygame.camera
 # import PIL.Image as Image
 from cv2 import *
+from shutil import copyfile
 
 
 # from SimpleCV import Image, Camera
@@ -45,6 +46,14 @@ image_path = os.path.join(cwd,temp)
 print(image_path)
 secretkey = os.path.join(cwd,r"sixth-well-302300-cc8ce0454489.json")
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = secretkey
+downloads_dir = os.path.expanduser(os.path.join('~','Downloads'))
+Image_name = 'UniqueUnicorn.png'
+Temp_image_path = os.path.join(downloads_dir,Image_name)
+
+print(Temp_image_path)
+# Remove the file so we can use the same name over and over
+if os.path.exists(Temp_image_path):
+    os.remove(Temp_image_path)
 ##============================ Extract text from image==================
 
 # vidcap = cv2.VideoCapture(0)
@@ -146,12 +155,12 @@ def convertor_text_to_speech(translated_text,language):
         )
 
         try:
-            os.remove("static/output.mp3")
+            os.remove(os.path.join("static","output.mp3"))
         except OSError:
             pass
 
         # The response's audio_content is binary.
-        with open("static/output.mp3", "wb") as out:
+        with open(os.path.join("static","output.mp3"), "wb") as out:
             # Write the response to the output file.
             out.write(response.audio_content)
             print('Audio content written to file "output.mp3"')
@@ -174,16 +183,18 @@ def allowed_file(filename):
 @app.route('/index', methods=('GET', 'POST'))
 def index():
     try:
-        os.remove("static/output.mp3")
+        os.remove(os.path.join("static","output.mp3"))
     except OSError:
         pass
     result = "Translated_Text"
     translated_result  = dict()
+    global Image_name
+    global Temp_image_path
     print("request",request)
     if request.method == 'POST':
-        filename='Image.jpg'
+        filename=Image_name
         print("inside post request")
-
+        
         # check if the post request has the file part
           
 #             return render_template("translate.html", text=temp)
@@ -191,17 +202,25 @@ def index():
         # if 'file' not in request.files:
         #     flash('No file part')
         #     return redirect(request.url)
-        file = request.files['file']
-        print(file.filename)
+        # Copy the image from downloads to static/upload folder for consistency and delete the image from downloads
+        src = Temp_image_path
+        dst =os.path.join(app.config['UPLOAD_FOLDER'], Image_name)
+        copyfile(src, dst)
+
+        if os.path.exists(Temp_image_path):
+            os.remove(Temp_image_path)
+
+        #file = request.files['file']
+        #print(file.filename)
         print(app.config['UPLOAD_FOLDER'])
         # if user does not select file, browser also
         # submit an empty part without filename
         # if file.filename == '':
         #     flash('No selected file')
             # return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        #if file and allowed_file(file.filename):
+         #   filename = secure_filename(file.filename)
+          #  file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
           
         print(filename)  
         print("checking for tanslation button",request.form)
@@ -294,5 +313,5 @@ if __name__ == '__main__':
     app.secret_key = 'super secret key'
     app.config['SESSION_TYPE'] = 'filesystem'  
 
-    app.run(host="127.0.0.1",port="8000",debug=True)
+    app.run(host="127.0.0.1",port="8000")
 # host="localhost",port="8000",debug=True

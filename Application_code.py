@@ -143,7 +143,7 @@ def translate_text(target, Listoftext):
     # print("List",Listoftext)
     import six
     from google.cloud import translate_v2 as translate
-    d = dict()
+    result_list = []
     translate_client = translate.Client()
     for text in Listoftext:
         # print("insideloop",text)
@@ -156,8 +156,9 @@ def translate_text(target, Listoftext):
     
         result = translate_client.translate(text, target_language=target)
         temp = format(result["translatedText"])
-        d[text]= temp
-    return d
+        result_list.append(temp)
+    final_list = list(map(lambda x,y:(x,y),Listoftext,result_list))
+    return final_list, result_list
 
 def convertor_text_to_speech(translated_text,language):
     
@@ -241,7 +242,7 @@ def index():
     except OSError:
         pass
     result = "Translated_Text"
-    translated_result  = dict()
+    translated_result  = list()
     trans_list = []
     translated_final_text = []
     myJson = []
@@ -277,11 +278,12 @@ def index():
         # print(language)
 #        language = "en-US"
         result = convertor_image_to_text(filename)
-        list_of_text = result.splitlines()
+        list_of_text = result.split('\n')
+        
 #        print(result)
-        translated_result = translate_text(language,list_of_text)
-        translated_text = translated_result.values()
-        translated_final_text = '. '.join(translated_text)
+        translated_result, translated_list = translate_text(language,list_of_text)
+        print("translated restult:", translated_result)
+        translated_final_text = '. '.join(translated_list)
         convertor_text_to_speech(translated_final_text,language)
         check_available_lang = {"en":"en-US"}
         if language in check_available_lang:
@@ -381,5 +383,5 @@ if __name__ == '__main__':
     app.secret_key = 'super secret key'
     app.config['SESSION_TYPE'] = 'filesystem'
 
-    app.run(host="192.168.1.5",port="8080",debug=True)
+    app.run(host="0.0.0.0",port="8080",debug=True)
 # host="localhost",port="8000",debug=True

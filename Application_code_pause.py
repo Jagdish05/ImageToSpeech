@@ -51,7 +51,7 @@ image_path = "static/captures/"
 cam = VideoCapture(0)
 
 def transcript(file,language):
-    check_available_lang = {"en":"en-US"}
+    check_available_lang = {"en":"en-US","es":"es-US","ru":"ru-RU"}
     language = check_available_lang[language]
     print("language",language)
     client = speech.SpeechClient()
@@ -99,13 +99,13 @@ def convertor_image_to_text(filename):
 
         response = client.text_detection(image=image)
         texts = response.text_annotations
-        # for text in texts:
-        #     print('\n"{}"'.format(text.description))
+        for text in texts:
+            print('\n"{}"'.format(text.description))
 
-        #     vertices = (['({},{})'.format(vertex.x, vertex.y)
-        #                 for vertex in text.bounding_poly.vertices])
+            vertices = (['({},{})'.format(vertex.x, vertex.y)
+                        for vertex in text.bounding_poly.vertices])
 
-        #     print('bounds: {}'.format(','.join(vertices)))
+            print('bounds: {}'.format(','.join(vertices)))
 #        print(response)
 #        print('Texts:',texts[0].description)
         myJson = []
@@ -245,11 +245,11 @@ def index():
     trans_list = []
     translated_final_text = []
     myJson = []
-    # print("request",request)
+    print("request",request)
 #    token = request.get_json()['token']
     if request.method == 'POST':
         filename='Image.jpg'
-        # print("inside post request",request)
+        print("inside post request",request)
         # check if the post request has the file part
           
 #             return render_template("translate.html", text=temp)
@@ -274,7 +274,7 @@ def index():
         
         # if request.form['Start_translate'] == 'Translate':
         language = request.form["language"]
-        # print(language)
+        print(language)
 #        language = "en-US"
         result = convertor_image_to_text(filename)
         list_of_text = result.splitlines()
@@ -283,12 +283,12 @@ def index():
         translated_text = translated_result.values()
         translated_final_text = '. '.join(translated_text)
         convertor_text_to_speech(translated_final_text,language)
-        check_available_lang = {"en":"en-US"}
+        check_available_lang = {"en":"en-US","es":"es-US","ru":"ru-RU"}
         if language in check_available_lang:
             myJson = transcript("static/output.mp3",language)
             print("Google API transcribe")
         else:
-            # print(translated_final_text)
+            print(translated_final_text)
             translated_final_text = translated_final_text.split()
             audio = MP3("static/output.mp3")
             lenAudio = audio.info.length
@@ -302,7 +302,7 @@ def index():
                 myDictObj = { "end":str(round(end_time,1)), "start":str(round(totalTime,1)), "text":text }
                 myJson.append(myDictObj)
                 totalTime = totalTime + time
-            # print("myJson",myJson)
+            print("myJson",myJson)
 
     return render_template('index.html', content = trans_list, text = translated_result, finalTextList = myJson)
    
@@ -381,5 +381,5 @@ if __name__ == '__main__':
     app.secret_key = 'super secret key'
     app.config['SESSION_TYPE'] = 'filesystem'
 
-    app.run(host="192.168.1.5",port="8080",debug=True)
+    app.run(host="0.0.0.0",port="8080",debug=True)
 # host="localhost",port="8000",debug=True
